@@ -10,6 +10,7 @@ struct Panel
     float voltage;
     float current;
     float radiation;
+    int32_t next_index;
 };
 
 
@@ -50,84 +51,19 @@ int main()
     // Hasta acá, solo llevo leido el Header.
 
     int32_t start_index_panel_1;
-    int32_t next_index_panel_1;
-
     int32_t start_index_panel_2;
-    int32_t next_index_panel_2;
+
     
     
     fread(&start_index_panel_1, sizeof(int32_t), 1, pf);
     printf("\nStart Index Panel #1: %d", start_index_panel_1);
     fread(&start_index_panel_2, sizeof(int32_t), 1, pf);
     printf("\nStart Index Panel #2: %d", start_index_panel_2);
-    fseek(pf, (start_index_panel_1*sizeof(struct Panel)), SEEK_CUR);
-    fread(&vector1[0].voltage, sizeof(float), 1, pf);
-    printf("\nVoltage: %0.3f V", vector1[0].voltage);
-    fread(&vector1[0].current, sizeof(float), 1, pf);
-    printf("\nCurrent: %0.3f A", vector1[0].current);
-    fread(&vector1[0].radiation, sizeof(float), 1, pf);
-    printf("\nRadiation: %0.3f W/m^2", vector1[0].radiation);
-    fread(&next_index_panel_1, sizeof(int32_t), 1, pf);
-    printf("\nNext Index Panel #1: %d", next_index_panel_1);
-    //fseek(pf, (next_index_panel_1*sizeof(struct Panel)), SEEK_CUR);    
     printf("\n");
-
-    /*
+    printf("\n");
+    // Hasta acá, solo llevo leido el Header y los dos start Index para los dos paneles.
+    
     // Llenando vector 1.
-    for (uint8_t i = 0; i < (total_count/2); i++) 
-    {
-        printf("\n\ni: %d", i);
-        if(i == 0)
-        {
-            fread(&start_index_panel_1, sizeof(int32_t), 1, pf); // 1er vuelta: Donde está la posicion '0' para el panel 1.
-            printf("\nStart Index Panel #1: %d", start_index_panel_1);
-            fseek(pf, (sizeof(int32_t)), SEEK_SET);
-            fseek(pf, (start_index_panel_1*sizeof(struct Panel)), SEEK_SET);
-        }
-        fread(&vector1[i].voltage, sizeof(float), 1, pf);
-        fread(&vector1[i].current, sizeof(float), 1, pf);
-        fread(&vector1[i].radiation, sizeof(float), 1, pf);
-        fread(&next_index_panel_1, sizeof(int32_t), 1, pf);
-        printf("\nNext Index Panel #1: %d", next_index_panel_1);
-        // Mover el puntero del archivo al siguiente paquete
-        if (next_index_panel_1 != (-1)) 
-        {
-            fseek(pf, (next_index_panel_1*sizeof(struct Panel)), SEEK_SET); // El indice del panel se cuenta desde el inicio del archivo
-        } 
-        else 
-        {
-            break; // Si nextIndex es -1, hemos llegado al final de los datos del panel
-        }
-    }
-    
-    // Llenando vector 2.
-    for (uint8_t i = 0; i < (total_count/2); i++) 
-    {
-        printf("\n\ni: %d", i);
-        if(i == 0)
-        {
-            fread(&start_index_panel_2, sizeof(int32_t), 1, pf); // 1er vuelta: Donde está la posicion '0' para el panel 1.
-            printf("\nStart Index Panel #2: %d", start_index_panel_2);
-            fseek(pf, (start_index_panel_2*sizeof(struct Panel)), SEEK_SET);
-        }
-        fread(&vector2[i].voltage, sizeof(float), 1, pf);
-        fread(&vector2[i].current, sizeof(float), 1, pf);
-        fread(&vector2[i].radiation, sizeof(float), 1, pf);
-        fread(&next_index_panel_2, sizeof(int32_t), 1, pf);
-        printf("\nNext Index Panel #2: %d", next_index_panel_2);
-        // Mover el puntero del archivo al siguiente paquete
-        if (next_index_panel_2 != (-1)) {
-            fseek(pf, (next_index_panel_2*sizeof(struct Panel)), SEEK_SET); // El indice del panel se cuenta desde el inicio del archivo
-        } 
-        else 
-        {
-            break; // Si nextIndex es -1, hemos llegado al final de los datos del panel
-        }
-    }
-    
-    /*
-    printf("\n");
-    // Imprimiendo vector 1.
     printf("\n");
     for(uint8_t i = 0 ; i < 40 ; i++)
     {
@@ -139,22 +75,38 @@ int main()
     {
         printf("-");
     }
-    for(uint8_t i = 0; i < (total_count/2); i++)
+    for (uint8_t i = 0; i < (total_count/2); i++) 
     {
-        printf("\n[%u]:", i);
+        if(i == 0)
+        {
+            fseek(pf, (sizeof(uint32_t) + 2*sizeof(int32_t) + (start_index_panel_1)*sizeof(struct Panel)), SEEK_SET);
+            
+        }
+        // Leyendo y cargando datos.
+        printf("\n[%u]", i);
+        fread(&vector1[i].voltage, sizeof(float), 1, pf);
         printf("\nVoltage: %0.3f V", vector1[i].voltage);
+        fread(&vector1[i].current, sizeof(float), 1, pf);
         printf("\nCurrent: %0.3f A", vector1[i].current);
+        fread(&vector1[i].radiation, sizeof(float), 1, pf);
         printf("\nRadiation: %0.3f W/m^2", vector1[i].radiation);
+        fread(&vector1[i].next_index, sizeof(int32_t), 1, pf);
+        printf("\nNext Index: %d", vector1[i].next_index);
+        fseek(pf, (sizeof(uint32_t) + 2*sizeof(int32_t) + (vector1[i].next_index)*sizeof(struct Panel)), SEEK_SET);
         printf("\n");
         for(uint8_t i = 0 ; i < 30 ; i++)
         {
             printf("-");
         }
-    } 
-    
-    
+        // Si nextIndex es -1, hemos llegado al final de los datos del panel.
+        if (vector1[i].next_index == (-1)) 
+        {
+            break;
+        } 
+    }
     printf("\n");
-    // Imprimiendo vector 2.
+
+    // Llenando vector 2.
     printf("\n");
     for(uint8_t i = 0 ; i < 40 ; i++)
     {
@@ -166,19 +118,36 @@ int main()
     {
         printf("-");
     }
-    for(uint8_t i = 0; i < (total_count/2); i++)
+    for (uint8_t i = 0; i < (total_count/2); i++) 
     {
-        printf("\n[%u]:", i);
+        if(i == 0)
+        {
+            fseek(pf, (sizeof(uint32_t) + 2*sizeof(int32_t) + (start_index_panel_2)*sizeof(struct Panel)), SEEK_SET);
+            
+        }
+        // Leyendo y cargando datos.
+        printf("\n[%u]", i);
+        fread(&vector2[i].voltage, sizeof(float), 1, pf);
         printf("\nVoltage: %0.3f V", vector2[i].voltage);
+        fread(&vector2[i].current, sizeof(float), 1, pf);
         printf("\nCurrent: %0.3f A", vector2[i].current);
+        fread(&vector2[i].radiation, sizeof(float), 1, pf);
         printf("\nRadiation: %0.3f W/m^2", vector2[i].radiation);
+        fread(&vector2[i].next_index, sizeof(int32_t), 1, pf);
+        printf("\nNext Index: %d", vector2[i].next_index);
+        fseek(pf, (sizeof(uint32_t) + 2*sizeof(int32_t) + (vector2[i].next_index)*sizeof(struct Panel)), SEEK_SET);
         printf("\n");
         for(uint8_t i = 0 ; i < 30 ; i++)
         {
             printf("-");
         }
-    } 
-    */
+        // Si nextIndex es -1, hemos llegado al final de los datos del panel.
+        if (vector2[i].next_index == (-1)) 
+        {
+            break;
+        } 
+    }
+    printf("\n");
 
 
     fclose(pf);
