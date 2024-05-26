@@ -63,7 +63,7 @@ int main()
     printf("\n");
     // Hasta acá, solo llevo leido el Header y los dos start Index para los dos paneles.
     
-    // Llenando vector 1.
+    // Llenando e imprimiendo vector 1.
     printf("\n");
     for(uint8_t i = 0 ; i < 40 ; i++)
     {
@@ -106,7 +106,7 @@ int main()
     }
     printf("\n");
 
-    // Llenando vector 2.
+    // Llenando e imprimiendo vector 2.
     printf("\n");
     for(uint8_t i = 0 ; i < 40 ; i++)
     {
@@ -149,17 +149,120 @@ int main()
     }
     printf("\n");
 
+    float *vector_rendimiento_1 = new float[(total_count/2)];
+    float *vector_rendimiento_2 = new float[(total_count/2)];
+
+    printf("\n");
+    float area_en_mm_cuad;
+    area_en_mm_cuad = (width*height)*1.0;
+    printf("\nArea en mm^2: %0.2f mm^2", area_en_mm_cuad);
+    float area_en_m_cuad = (area_en_mm_cuad)*(0.000001);
+    printf("\nArea en m^2: %0.2f m^2", area_en_m_cuad);
+    printf("\n\n");
+    // Llenando e imprimiendo vector_rendimiento_1
+    printf("\n\nVector de rendimientos del panel 1:");
+    for(uint8_t i = 0 ; i < (total_count/2) ; i++)
+    {
+        vector_rendimiento_1[i] = ((vector1[i].voltage)*(vector1[i].current))/(((area_en_m_cuad)*(vector1[i].radiation)))*100;
+        printf("\nrendimiento_[%u] = %0.2f por ciento", i, vector_rendimiento_1[i]);
+    }
+
+    // Llenando e imprimiendo vector_rendimiento_2
+    printf("\n\nVector de rendimientos del panel 2:");
+    for(uint8_t i = 0 ; i < (total_count/2) ; i++)
+    {
+        vector_rendimiento_2[i] = (((vector2[i].voltage)*(vector2[i].current))/((area_en_m_cuad)*(vector2[i].radiation)))*100;
+        printf("\nrendimiento_[%u] = %0.2f por ciento", i, vector_rendimiento_2[i]);
+    }
+
+    float rendimiento_max_panel_1;
+    float rendimiento_max_panel_2;
+
+    float rendimiento_min_panel_1;
+    float rendimiento_min_panel_2;
+
+    float suma_rendimientos_panel_1 = 0;
+    float suma_rendimientos_panel_2 = 0;
+    
+    float rendimiento_prom_panel_1;
+    float rendimiento_prom_panel_2;
+
+    // Calculando rendimiento maximo, minimo y promedio para el panel 1.
+    for(uint8_t i = 0 ; i < (total_count/2) ; i++)
+    {
+        if(i == 0)
+        {
+            rendimiento_max_panel_1 = vector_rendimiento_1[i];
+            rendimiento_min_panel_1 = vector_rendimiento_1[i];
+        }
+        else
+        {
+            if(vector_rendimiento_1[i] > rendimiento_max_panel_1)
+            {
+                rendimiento_max_panel_1 = vector_rendimiento_1[i];
+            }
+            else
+            {
+                if(vector_rendimiento_1[i] < rendimiento_min_panel_1)
+                {
+                    rendimiento_min_panel_1 = vector_rendimiento_1[i];
+                }
+            }
+        }
+        suma_rendimientos_panel_1 = suma_rendimientos_panel_1 + vector_rendimiento_1[i];
+    }
+    rendimiento_prom_panel_1 = (suma_rendimientos_panel_1)/((total_count/2)*1.0);
+
+    // Calculando rendimiento maximo, minimo y promedio para el panel 2.
+    for(uint8_t i = 0 ; i < (total_count/2) ; i++)
+    {
+        if(i == 0)
+        {
+            rendimiento_max_panel_2 = vector_rendimiento_2[i];
+            rendimiento_min_panel_2 =  vector_rendimiento_2[i];
+        }
+        else
+        {
+            if(vector_rendimiento_2[i] > rendimiento_max_panel_2)
+            {
+                rendimiento_max_panel_2 = vector_rendimiento_2[i];
+            }
+            else
+            {
+                if(vector_rendimiento_2[i] < rendimiento_min_panel_2)
+                {
+                    rendimiento_min_panel_2 =  vector_rendimiento_2[i];
+                }
+            }
+        }
+        suma_rendimientos_panel_2 = suma_rendimientos_panel_2 + vector_rendimiento_2[i];
+    }
+    rendimiento_prom_panel_2 = (suma_rendimientos_panel_2)/((total_count/2)*1.0);
+
+    printf("\n\n");
+    // Imprimiendo rendimiento maximo, minimo y promedio para el panel 1.
+    printf("\nRendimiento maximo del panel 1: %0.2f por ciento", rendimiento_max_panel_1);
+    printf("\nRendimiento minimo del panel 1: %0.2f por ciento", rendimiento_min_panel_1);
+    printf("\nRendimiento promedio del panel 1: %0.2f por ciento", rendimiento_prom_panel_1);
+    printf("\n");
+    // Calculando rendimiento maximo, minimo y promedio para el panel 2.
+    printf("\nRendimiento maximo del panel 2: %0.2f por ciento", rendimiento_max_panel_2);
+    printf("\nRendimiento minimo del panel 2: %0.2f por ciento", rendimiento_min_panel_2);
+    printf("\nRendimiento promedio del panel 2: %0.2f por ciento", rendimiento_prom_panel_2);
+
 
     fclose(pf);
     
     // Liberar memoria.
     delete[] vector1;
     delete[] vector2;
-
+    delete[] vector_rendimiento_1;
+    delete[] vector_rendimiento_2;
     // Anulando punteros;
     vector1 = NULL;
     vector2 = NULL;
-
-    printf("\n\nTHE END");
+    vector_rendimiento_1 = NULL;
+    vector_rendimiento_2 = NULL;
+    printf("\n\n\nTHE END");
     return 0;
 }
