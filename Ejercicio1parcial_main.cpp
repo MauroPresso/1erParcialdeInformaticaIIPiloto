@@ -45,11 +45,13 @@ int main()
     
     uint32_t encabezado;
     uint32_t cant_registros = 0;
+    uint32_t cant_consumos_adeudados;
     rewind(pf);
     while( fread(&encabezado, sizeof(uint32_t), 1, pf) != 0 ) // Mientras lea encabezados va a seguir en el bucle.
     {
+        cant_consumos_adeudados = extract_bits_segment32(encabezado, 16, 20);
+        fseek(pf, ((sizeof(uint32_t)) + sizeof(float) + ((cant_consumos_adeudados)*(sizeof(float)))), SEEK_CUR);
         cant_registros++;
-        fseek(pf, (2*(sizeof(uint32_t))), SEEK_CUR); // 'Salta' hasta el proximo encabezado.
     }
     
     struct Registro *vector = new struct Registro[cant_registros];
@@ -79,7 +81,9 @@ int main()
             }
         }
     }
+    printf("\n");
     // Imprimiendo vector
+    printf("\nregistro_copelco_3.dat");
     printf("\n");
     for(uint8_t i = 0 ; i < 40 ; i++)
     {
@@ -94,7 +98,7 @@ int main()
             printf("-");
         }
         printf("\nID asociado: %u", vector[i].ID_asoc);
-        printf("\nFecha del ultimo consumo: %u/%u/%u ", vector[i].fecha_ult_consumo.dia, vector[i].fecha_ult_consumo.mes, vector[i].fecha_ult_consumo.ano);
+        printf("\nFecha del ultimo consumo: %u/%u/%u ", vector[i].fecha_ult_consumo.ano, vector[i].fecha_ult_consumo.mes, vector[i].fecha_ult_consumo.dia);
         printf("\nTarifa: $%u,%u", vector[i].tarifa_del_kWh.parte_entera, vector[i].tarifa_del_kWh.parte_decimal);
         printf("\nUltimo consumo: $%0.2f", vector[i].ult_consumo);
         if(vector[i].cant_periodos_impagos > 0)
@@ -110,8 +114,14 @@ int main()
             printf("\nPeriodos impagos: 0");
         }
     }
-
+    printf("\n");
+    for(uint8_t i = 0 ; i < 30 ; i++)
+    {
+        printf("-");
+    }
+    
     // Total a cobrar
+    printf("\n");
     float total_a_cobrar = 0;
     for(uint8_t i = 0; i < cant_registros; i++)
     {
@@ -122,12 +132,7 @@ int main()
         }
 
     }
-    printf("\n\nTotal a cobrar (en pesos): $%0.2f", total_a_cobrar);
-
-
-
-
-
+    printf("\nTotal a cobrar (en pesos): $%0.2f", total_a_cobrar);
 
     fclose(pf);
     // Libero memoria.
@@ -135,6 +140,6 @@ int main()
     // Anulo puntero
     vector = NULL;
     
-    printf("\n\nTHE END");
+    printf("\n\n\nTHE END");
     return 0;
 }
